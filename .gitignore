@@ -39,6 +39,3 @@ Thumbs.db
 
 # Docker
 *.override.yml.local
-
-# Poetry
-poetry.lock

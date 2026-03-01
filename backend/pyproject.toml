@@ -1,0 +1,88 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = "AI Assistant backend service"
+authors = []
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+
+# PyTorch CPU-only (declared via explicit source to avoid CUDA binaries)
+torch = { version = "^2.10.0", source = "pytorch-cpu" }
+
+# Web
+fastapi = "^0.135.1"
+uvicorn = { version = "^0.41.0", extras = ["standard"] }
+
+# Database
+sqlalchemy = { version = "^2.0.47", extras = ["asyncio"] }
+asyncpg = "^0.31.0"
+alembic = "^1.18.4"
+
+# Validation / Config
+pydantic = { version = "^2.12.5", extras = ["email"] }
+pydantic-settings = "^2.13.1"
+
+# Auth
+python-jose = { version = "^3.5.0", extras = ["cryptography"] }
+passlib = { version = "^1.7.4", extras = ["bcrypt"] }
+
+# LLM / RAG
+langchain = "^1.2.10"
+langchain-community = "^0.4.1"
+langchain-core = "^1.2.16"
+langchain-qdrant = "^1.1.0"
+langchain-gigachat = { version = ">=0.2.1b4", allow-prereleases = true }
+langchain-openai = "^1.1.10"
+qdrant-client = "^1.17.0"
+
+# Queue
+arq = "^0.27.0"
+
+# Email
+aiosmtplib = "^5.1.0"
+
+# Utils
+cryptography = "^46.0.5"
+tiktoken = "^0.12.0"
+httpx = "^0.28.1"
+tenacity = "^9.1.4"
+pybreaker = "^1.4.1"
+sentence-transformers = "^5.2.3"
+boto3 = "^1.42.59"
+
+# Observability
+structlog = "^25.5.0"
+prometheus-client = "^0.24.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+httpx = "*"
+ruff = "*"
+black = "*"
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
