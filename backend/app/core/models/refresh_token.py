@@ -32,7 +32,8 @@ class RefreshToken(Base):
     user_agent: Mapped[str | None] = mapped_column(String(500))
 
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

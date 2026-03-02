@@ -14,14 +14,14 @@ class SystemSettings(Base):
         CheckConstraint("id = 1", name="ck_system_settings_singleton"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1, server_default="1")
 
     llm_provider: Mapped[str] = mapped_column(String(50))
     llm_model: Mapped[str] = mapped_column(String(100))
 
-    max_tokens: Mapped[int] = mapped_column(Integer, default=2048)
-    temperature: Mapped[float] = mapped_column(Float, default=0.7)
-    retrieval_top_k: Mapped[int] = mapped_column(Integer, default=5)
+    max_tokens: Mapped[int] = mapped_column(Integer, default=2048, server_default="2048")
+    temperature: Mapped[float] = mapped_column(Float, default=0.7, server_default="0.7")
+    retrieval_top_k: Mapped[int] = mapped_column(Integer, default=5, server_default="5")
 
     welcome_message: Mapped[str | None] = mapped_column(Text)
 

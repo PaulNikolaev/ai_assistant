@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, String, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -37,12 +37,14 @@ class Document(Base):
     status: Mapped[DocumentStatus] = mapped_column(
         Enum(DocumentStatus, name="documentstatus"),
         default=DocumentStatus.pending,
+        server_default=text("'pending'::documentstatus"),
     )
     error_message: Mapped[str | None] = mapped_column(Text)
 
     access_level: Mapped[DocumentAccessLevel] = mapped_column(
         Enum(DocumentAccessLevel, name="documentaccesslevel"),
         default=DocumentAccessLevel.private,
+        server_default=text("'private'::documentaccesslevel"),
     )
     uploaded_by: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), index=True

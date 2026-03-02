@@ -20,7 +20,7 @@ class LlmProviderKey(Base):
     key_encrypted: Mapped[str] = mapped_column(Text)
 
     label: Mapped[str | None] = mapped_column(String(200))
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
