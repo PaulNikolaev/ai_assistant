@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "messengers"
+version = "0.1.0"
+description = "AI Assistant messengers service"
+authors = []
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+fastapi = "^0.115.0"
+uvicorn = "^0.34.0"
+httpx = "^0.28.0"
+aiogram = "^3.17.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+black = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]

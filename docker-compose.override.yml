@@ -38,6 +38,10 @@ services:
       - ./backend/app:/app/app
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
+  messengers:
+    ports:
+      - "8001:8000"
+
   worker:
     volumes:
       - ./backend/app:/app/app
