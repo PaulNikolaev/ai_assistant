@@ -1,49 +1,30 @@
 # Корпоративный AI-ассистент
 
-Корпоративный чат-ассистент на основе внутренней базы знаний (RAG).
-Отвечает на вопросы сотрудников исключительно по загруженным документам.
-Доступен через веб-интерфейс, Telegram и MAX (VK).
+Чат-ассистент на базе внутренней базы знаний (RAG): ответы только по загруженным документам. Планируется доступ через веб, Telegram и MAX (VK). Сейчас реализованы backend (FastAPI), воркер (ARQ), инфраструктура и заготовки фронтенда/админки.
 
-## Быстрый старт
+## Запуск
 
 ```bash
 git clone https://github.com/your-org/ai-assistant.git
 cd ai-assistant
-cp .env.example .env       # заполнить реальные значения
+cp .env.example .env   # заполнить при необходимости
 docker compose up --build
 ```
 
-После запуска:
+После старта:
 
-| Сервис            | URL                        |
-|-------------------|----------------------------|
-| Веб-интерфейс     | http://localhost            |
-| Админ-панель      | http://localhost/admin      |
-| API (Swagger)     | http://localhost/docs       |
-| Grafana           | http://localhost:3000       |
-| MinIO Console     | http://localhost:9001       |
-| MailHog (письма)  | http://localhost:8025       |
-
-Первый суперадмин создаётся автоматически из переменных `SUPERADMIN_EMAIL` и `SUPERADMIN_PASSWORD` в `.env`.
+| Сервис        | URL                     |
+|---------------|-------------------------|
+| Веб-интерфейс | http://localhost        |
+| Админ-панель  | http://localhost/admin  |
+| API (Swagger) | http://localhost/api/docs |
+| Health        | http://localhost/api/health |
 
 ## Стек
 
-| Слой             | Технологии                                      |
-|------------------|-------------------------------------------------|
-| Backend          | FastAPI, LangChain, ARQ, SQLAlchemy, Alembic    |
-| LLM-провайдеры   | GigaChat, Yandex GPT, OpenRouter, VseGPT        |
-| Эмбеддинги       | sentence-transformers (multilingual-e5-base)    |
-| Векторная БД     | Qdrant                                          |
-| База данных      | PostgreSQL                                      |
-| Кэш / Очередь    | Redis + ARQ                                     |
-| Хранилище файлов | MinIO (S3-совместимый)                          |
-| Frontend / Admin | Vue 3, Vite, Pinia, Naive UI                    |
-| Мессенджеры      | aiogram (Telegram), max-botapi-python (MAX)     |
-| Прокси           | Nginx                                           |
-| Мониторинг       | Prometheus + Grafana                            |
-| Email (dev)      | MailHog                                         |
+Backend: FastAPI, SQLAlchemy, Alembic, ARQ. Инфраструктура: PostgreSQL, Redis, Qdrant, MinIO. Фронтенд и админка: Vue 3, Vite. Мессенджеры: aiogram (Telegram), max-botapi-python (MAX). Прокси: Nginx. Мониторинг: Prometheus, Grafana.
 
-## Структура проекта
+## Структура
 
 ```
 ├── backend/          # FastAPI API + ARQ worker
@@ -56,7 +37,5 @@ docker compose up --build
 ├── scripts/          # dev.sh, backup/
 ├── docs/             # restore.md, production.md, 152fz.md
 ├── .env.example      # Шаблон переменных окружения
-├── Makefile          # Удобные команды
 └── docker-compose.yml
 ```
-
