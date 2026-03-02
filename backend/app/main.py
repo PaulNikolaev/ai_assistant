@@ -5,32 +5,46 @@ Logging is initialised first so that all subsequent startup messages
 are captured in the configured format.
 """
 
+import asyncio
 import time
 from contextlib import asynccontextmanager
+from typing import Literal
 
 import structlog
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest  # pyright: ignore[reportMissingImports]
 from pydantic import BaseModel
+from sqlalchemy import text
 from starlette.middleware.base import RequestResponseEndpoint
 from structlog.contextvars import get_contextvars
 
 from app.api.middleware.trace_id import TraceIDMiddleware
 from app.core.config import settings
+from app.core.database import AsyncSessionLocal
 from app.core.logging import configure_logging
+from app.core.qdrant import check_qdrant, close_qdrant, init_qdrant
+from app.core.redis import close_redis_pool, create_redis_pool, get_redis_client
+from app.core.storage import get_storage, init_storage
 
 logger = structlog.get_logger(__name__)
+
+ServiceStatus = Literal["ok", "degraded"]
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     configure_logging(settings.APP_ENV)
+    await create_redis_pool()
+    init_qdrant()
+    init_storage()
     logger.info("application startup", env=settings.APP_ENV)
     yield
     logger.info("application shutdown")
+    await close_redis_pool()
+    await close_qdrant()
 
 
 app = FastAPI(title="AI Assistant", lifespan=lifespan)
@@ -110,7 +124,7 @@ async def unhandled_exception_handler(
     trace_id = get_contextvars().get("trace_id")
     logger.exception("unhandled error", exc_info=exc)
     return JSONResponse(
-        status_code=500,
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "detail": "Internal server error",
             "code": "internal_error",
@@ -119,18 +133,101 @@ async def unhandled_exception_handler(
     )
 
 
+# ── Health check helpers ──────────────────────────────────────────────────
+
+
+async def _check_postgres() -> ServiceStatus:
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+        return "ok"
+    except Exception as exc:
+        logger.warning("postgres health check failed", exc_info=exc)
+        return "degraded"
+
+
+async def _check_redis() -> ServiceStatus:
+    client = get_redis_client()
+    if client is None:
+        client = await create_redis_pool()
+    if client is None:
+        return "degraded"
+    try:
+        result = await client.ping()
+        return "ok" if result else "degraded"
+    except Exception as exc:
+        logger.warning("redis health check failed", exc_info=exc)
+        return "degraded"
+
+
+async def _check_qdrant() -> ServiceStatus:
+    ok = await check_qdrant()
+    return "ok" if ok else "degraded"
+
+
+async def _check_minio() -> ServiceStatus:
+    try:
+        ok = await get_storage().check()
+        return "ok" if ok else "degraded"
+    except Exception as exc:
+        logger.warning("minio health check failed", exc_info=exc)
+        return "degraded"
+
+
+async def _check_worker() -> ServiceStatus:
+    client = get_redis_client()
+    if client is None:
+        return "degraded"
+    try:
+        val = await client.get("worker:heartbeat")
+        return "ok" if val is not None else "degraded"
+    except Exception as exc:
+        logger.warning("worker health check failed", exc_info=exc)
+        return "degraded"
+
+
 # ── Routes ────────────────────────────────────────────────────────────────
 
 
 class HealthResponse(BaseModel):
-    """Response schema for the liveness probe endpoint."""
+    """Response schema for the /health endpoint with per-service statuses."""
 
-    status: str
+    status: ServiceStatus
+    postgres: ServiceStatus
+    redis: ServiceStatus
+    qdrant: ServiceStatus
+    minio: ServiceStatus
+    worker: ServiceStatus
 
 
 @app.get("/health", response_model=HealthResponse)
-async def health() -> HealthResponse:
-    return HealthResponse(status="ok")
+async def health(response: Response) -> HealthResponse:
+    results = await asyncio.gather(
+        _check_postgres(),
+        _check_redis(),
+        _check_qdrant(),
+        _check_minio(),
+        _check_worker(),
+        return_exceptions=True,
+    )
+
+    def _to_status(r: ServiceStatus | BaseException) -> ServiceStatus:
+        return "degraded" if isinstance(r, BaseException) else r
+
+    postgres, redis, qdrant, minio, worker = (_to_status(r) for r in results)
+
+    critical_ok = postgres == "ok" and qdrant == "ok"
+    if not critical_ok:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+    return HealthResponse(
+        status="ok" if critical_ok else "degraded",
+        postgres=postgres,
+        redis=redis,
+        qdrant=qdrant,
+        minio=minio,
+        worker=worker,
+    )
 
 
 @app.get("/metrics")
