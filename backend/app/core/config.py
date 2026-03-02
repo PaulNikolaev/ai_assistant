@@ -60,7 +60,8 @@ class Settings(BaseSettings):
     MESSENGERS_INTERNAL_SECRET: str = "dev-internal-secret-change-in-production"
 
     # ── CORS ──────────────────────────────────────────────────────
-    ALLOWED_ORIGINS: list[str] = ["http://localhost", "http://localhost:80"]
+    # Comma-separated origins. HTTP is intentional for local dev (localhost).
+    ALLOWED_ORIGINS: str = "http://localhost,http://localhost:80"  # noqa: S106
 
     # ── Superadmin ────────────────────────────────────────────────
     SUPERADMIN_EMAIL: str = "admin@example.com"
@@ -110,6 +111,11 @@ class Settings(BaseSettings):
             self.QDRANT_URL = f"http://{self.QDRANT_HOST}:{self.QDRANT_PORT}"
 
         return self
+
+    @property
+    def allowed_origins_list(self) -> list[str]:
+        """Return ALLOWED_ORIGINS as a list, parsed from comma-separated string."""
+        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
 
 
 settings = Settings()
