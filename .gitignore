@@ -12,6 +12,14 @@ build/
 .mypy_cache/
 .ruff_cache/
 
+# Test reports & coverage
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+test-results.xml
+
 # Environment
 .env
 .env.local

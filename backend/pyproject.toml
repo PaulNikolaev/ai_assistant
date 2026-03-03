@@ -57,11 +57,13 @@ structlog = "^25.5.0"
 prometheus-client = "^0.24.1"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "*"
-pytest-asyncio = "*"
-httpx = "*"
-ruff = "*"
-black = "*"
+pytest = "^9.0.2"
+pytest-asyncio = "^1.3.0"
+pytest-cov = "^7.0.0"
+pytest-env = "^1.5.0"
+factory-boy = "^3.3.3"
+ruff = "^0.15.4"
+black = "^26.1.0"
 
 [[tool.poetry.source]]
 name = "pytorch-cpu"
@@ -86,3 +88,6 @@ target-version = ["py311"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["tests"]
+env_files = [".env.test"]
+addopts = "--cov=app --cov-report=term-missing"

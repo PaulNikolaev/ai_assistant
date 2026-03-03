@@ -51,7 +51,7 @@ ai-assistant/
 
 ```powershell
 # Клонировать репозиторий
-git clone https://github.com/your-org/ai-assistant.git
+git clone https://github.com/PaulNikolaev/ai_assistant.git
 cd ai-assistant
 
 # Создать .env из шаблона и при необходимости отредактировать
