@@ -7,10 +7,15 @@ are captured in the configured format.
 
 import asyncio
 import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Literal
 
 import structlog
+from alembic import command as alembic_command
+from alembic.config import Config as AlembicConfig
+from alembic.script import ScriptDirectory
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,16 +32,55 @@ from app.core.database import AsyncSessionLocal
 from app.core.logging import configure_logging
 from app.core.qdrant import check_qdrant, close_qdrant, init_qdrant
 from app.core.redis import close_redis_pool, create_redis_pool, get_redis_client
+from app.core.seed import seed_superadmin
 from app.core.storage import get_storage, init_storage
+
+configure_logging(settings.APP_ENV)
 
 logger = structlog.get_logger(__name__)
 
 ServiceStatus = Literal["ok", "degraded"]
 
+_ALEMBIC_INI: Path = Path(__file__).parent.parent / "alembic.ini"
+
+
+def _run_alembic_upgrade() -> None:
+    """Run ``alembic upgrade head`` synchronously (safe to call in a thread)."""
+    cfg = AlembicConfig(str(_ALEMBIC_INI))
+    alembic_command.upgrade(cfg, "head")
+
+
+async def _check_migrations_current() -> bool:
+    """Return True when the database revision matches the alembic head."""
+    cfg = AlembicConfig(str(_ALEMBIC_INI))
+    script = ScriptDirectory.from_config(cfg)
+    heads: set[str] = set(script.get_heads())
+
+    async with AsyncSessionLocal() as session:
+        # noinspection SqlNoDataSourceInspection
+        result = await session.execute(
+            text("SELECT version_num FROM alembic_version")
+        )
+        current: set[str] = {row[0] for row in result}
+
+    return current == heads
+
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
-    configure_logging(settings.APP_ENV)
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
+    if settings.APP_ENV == "development":
+        await asyncio.to_thread(_run_alembic_upgrade)
+        logger.info("alembic migrations applied")
+        async with AsyncSessionLocal() as db:
+            await seed_superadmin(db)
+    elif settings.APP_ENV == "production":
+        try:
+            is_current = await _check_migrations_current()
+            if not is_current:
+                logger.warning("Pending migrations detected, apply manually!")
+        except Exception as exc:
+            logger.warning("could not check migration status", exc_info=exc)
+
     await create_redis_pool()
     init_qdrant()
     init_storage()
@@ -47,7 +91,11 @@ async def lifespan(_app: FastAPI):
     await close_qdrant()
 
 
-app = FastAPI(title="AI Assistant", lifespan=lifespan)
+app = FastAPI(
+    title="AI Assistant",
+    lifespan=lifespan,
+    root_path=settings.ROOT_PATH,
+)
 
 # ── Middleware ────────────────────────────────────────────────────────────
 # Execution order: log_requests → TraceIDMiddleware → CORSMiddleware → route.

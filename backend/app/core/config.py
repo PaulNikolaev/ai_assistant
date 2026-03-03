@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     # ── App ────────────────────────────────────────────────────────
     APP_ENV: Literal["development", "production", "testing"] = "development"
+    ROOT_PATH: str = ""
 
     # ── PostgreSQL ─────────────────────────────────────────────────
     POSTGRES_HOST: str = "postgres"
