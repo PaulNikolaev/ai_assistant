@@ -89,5 +89,9 @@ target-version = ["py311"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-env_files = [".env.test"]
+env_files = ["../.env.test"]
 addopts = "--cov=app --cov-report=term-missing"
+filterwarnings = [
+    "ignore:coroutine 'Connection._cancel' was never awaited:RuntimeWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+]
