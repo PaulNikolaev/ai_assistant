@@ -52,6 +52,17 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "dev-jwt-secret-change-in-production-min-32-chars"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    # ── Registration & invites ────────────────────────────────────
+    ALLOW_SELF_REGISTRATION: bool = False
+    INVITE_TOKEN_EXPIRE_HOURS: int = 72
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 60
+    EMAIL_CHANGE_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # ── Data retention (ARQ tasks) ─────────────────────────────────
+    DATA_RETENTION_DAYS: int = 365
+    AUDIT_RETENTION_DAYS: int = 365
 
     # ── Encryption ────────────────────────────────────────────────
     # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"

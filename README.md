@@ -7,7 +7,7 @@
 ```bash
 git clone https://github.com/your-org/ai-assistant.git
 cd ai-assistant
-cp .env.example .env   # заполнить при необходимости
+cp .env.template .env   # заполнить при необходимости
 docker compose up --build
 ```
 
@@ -36,6 +36,6 @@ Backend: FastAPI, SQLAlchemy, Alembic, ARQ. Инфраструктура: Postgr
 ├── grafana/          # Provisioning + дашборды
 ├── scripts/          # dev.sh, backup/
 ├── docs/             # restore.md, production.md, 152fz.md
-├── .env.example      # Шаблон переменных окружения
+├── .env.template     # Шаблон переменных окружения
 └── docker-compose.yml
 ```

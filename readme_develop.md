@@ -29,7 +29,7 @@ ai-assistant/
 ├── grafana/                  # Provisioning + дашборды
 ├── docker-compose.yml        # Dev-стек
 ├── docker-compose.test.yml   # Изолированный тестовый стек
-├── .env.example              # Шаблон для dev
+├── .env.template             # Шаблон для dev
 └── .env.test.template        # Шаблон для тестов
 ```
 
@@ -55,7 +55,7 @@ git clone https://github.com/PaulNikolaev/ai_assistant.git
 cd ai-assistant
 
 # Создать .env из шаблона и при необходимости отредактировать
-cp .env.example .env
+cp .env.template .env
 
 # Собрать и запустить всё
 docker compose up --build
@@ -257,7 +257,7 @@ curl http://localhost:8000/health
 
 | Файл | Назначение | В git |
 |------|-----------|-------|
-| `.env.example` | Шаблон для dev | Да |
+| `.env.template` | Шаблон для dev | Да |
 | `.env` | Реальный dev-конфиг | Нет |
 | `.env.test.template` | Шаблон для тестов | Да |
 | `.env.test` | Реальный тестовый конфиг | Нет |
