@@ -197,8 +197,6 @@ async def _check_postgres() -> ServiceStatus:
 async def _check_redis() -> ServiceStatus:
     client = get_redis_client()
     if client is None:
-        client = await create_redis_pool()
-    if client is None:
         return "degraded"
     try:
         result = await client.ping()
@@ -217,6 +215,9 @@ async def _check_minio() -> ServiceStatus:
     try:
         ok = await get_storage().check()
         return "ok" if ok else "degraded"
+    except RuntimeError:
+        # Storage not initialised (lifespan not yet run or test env) — degrade silently.
+        return "degraded"
     except Exception as exc:
         logger.warning("minio health check failed", exc_info=exc)
         return "degraded"

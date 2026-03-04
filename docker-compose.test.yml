@@ -14,6 +14,8 @@ services:
       timeout: 5s
       retries: 10
     restart: "no"
+    networks:
+      - test
 
   redis-test:
     image: redis:7-alpine
@@ -25,6 +27,8 @@ services:
       timeout: 5s
       retries: 10
     restart: "no"
+    networks:
+      - test
 
   qdrant-test:
     image: qdrant/qdrant:latest
@@ -36,6 +40,8 @@ services:
       timeout: 5s
       retries: 10
     restart: "no"
+    networks:
+      - test
 
   minio-test:
     image: minio/minio:latest
@@ -51,6 +57,12 @@ services:
       timeout: 5s
       retries: 10
     restart: "no"
+    networks:
+      - test
+
+networks:
+  test:
+    name: ai-assistant_test
 
 volumes:
   postgres_test_data:
